@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PulseAI — Intelligent News</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #0d0d0d;
+      --paper: #f5f0e8;
+      --accent: #c84b31;
+      --muted: #8a8278;
+      --card: #ffffff;
+      --border: #e0d9ce;
+      --tag-bg: #f0ebe0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* Header */
+    header {
+      border-bottom: 2px solid var(--ink);
+      padding: 0 2rem;
+      position: sticky;
+      top: 0;
+      background: var(--paper);
+      z-index: 100;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0 0.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      font-weight: 900;
+      letter-spacing: -1px;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .header-date {
+      font-size: 0.75rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .live-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .live-dot {
+      width: 7px; height: 7px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* Category Nav */
+    .category-nav {
+      display: flex;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .category-nav::-webkit-scrollbar { display: none; }
+
+    .cat-btn {
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      font-weight: 500;
+      padding: 0.75rem 1.2rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--muted);
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .cat-btn:hover { color: var(--ink); }
+    .cat-btn.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* Main layout */
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 2rem;
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 2rem;
+    }
+
+    /* News grid */
+    .news-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto;
+      gap: 1px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .news-card {
+      background: var(--card);
+      padding: 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .news-card:hover { background: #faf7f2; }
+
+    .news-card.featured {
+      grid-column: 1 / -1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      padding: 2rem;
+      border-bottom: 2px solid var(--ink);
+    }
+
+    .featured-label {
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: var(--accent);
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .card-category {
+      display: inline-block;
+      font-size: 0.65rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      background: var(--tag-bg);
+      color: var(--muted);
+      padding: 3px 8px;
+      margin-bottom: 0.75rem;
+      font-weight: 500;
+    }
+
+    .card-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.1rem;
+      line-height: 1.35;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      color: var(--ink);
+    }
+
+    .featured .card-title {
+      font-size: 1.8rem;
+      line-height: 1.2;
+    }
+
+    .card-summary {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.6;
+      margin-bottom: 1rem;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .card-meta .source { font-weight: 600; color: var(--ink); }
+
+    .read-btn {
+      margin-top: 1rem;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--accent);
+      font-weight: 600;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-bottom: 1px solid var(--accent);
+      padding-bottom: 1px;
+      transition: gap 0.2s;
+    }
+
+    .read-btn:hover { gap: 10px; }
+
+    /* Sidebar */
+    .sidebar { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* Chat Box */
+    .chat-box {
+      border: 2px solid var(--ink);
+      background: var(--card);
+    }
+
+    .chat-header {
+      background: var(--ink);
+      color: var(--paper);
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .chat-header-icon { font-size: 1.1rem; }
+
+    .chat-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1rem;
+      font-weight: 700;
+    }
+
+    .chat-subtitle { font-size: 0.7rem; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px; }
+
+    .chat-messages {
+      height: 260px;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      scrollbar-width: thin;
+    }
+
+    .msg {
+      max-width: 85%;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      animation: fadeUp 0.3s ease;
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: var(--ink);
+      color: var(--paper);
+    }
+
+    .msg.ai {
+      align-self: flex-start;
+      background: var(--tag-bg);
+      color: var(--ink);
+      border-left: 3px solid var(--accent);
+    }
+
+    .msg.ai .msg-source {
+      font-size: 0.65rem;
+      color: var(--muted);
+      margin-top: 0.4rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .typing {
+      align-self: flex-start;
+      display: flex;
+      gap: 4px;
+      padding: 0.8rem 1rem;
+      background: var(--tag-bg);
+    }
+
+    .typing span {
+      width: 6px; height: 6px;
+      background: var(--muted);
+      border-radius: 50%;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: translateY(0); }
+      40% { transform: translateY(-6px); }
+    }
+
+    .chat-input-row {
+      display: flex;
+      border-top: 1px solid var(--border);
+    }
+
+    .chat-input {
+      flex: 1;
+      border: none;
+      padding: 0.9rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.83rem;
+      background: transparent;
+      outline: none;
+      color: var(--ink);
+    }
+
+    .chat-input::placeholder { color: var(--muted); }
+
+    .send-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      padding: 0 1.2rem;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .send-btn:hover { background: #a83928; }
+
+    /* Trending */
+    .trending-box {
+      border: 1px solid var(--border);
+      background: var(--card);
+    }
+
+    .box-header {
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 600;
+      color: var(--muted);
+    }
+
+    .trend-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.9rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .trend-item:last-child { border-bottom: none; }
+    .trend-item:hover { background: var(--tag-bg); }
+
+    .trend-num {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.4rem;
+      font-weight: 900;
+      color: var(--border);
+      line-height: 1;
+      min-width: 28px;
+    }
+
+    .trend-title {
+      font-size: 0.82rem;
+      font-weight: 500;
+      line-height: 1.4;
+      color: var(--ink);
+    }
+
+    .trend-meta { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+
+    /* Loading */
+    .skeleton {
+      background: linear-gradient(90deg, var(--border) 25%, var(--tag-bg) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: 2px;
+    }
+
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Refresh bar */
+    .refresh-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      font-size: 0.7rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 0.5rem;
+    }
+
+    .refresh-btn {
+      background: none;
+      border: 1px solid var(--border);
+      padding: 4px 12px;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      cursor: pointer;
+      color: var(--ink);
+      transition: all 0.2s;
+      font-family: 'DM Sans', sans-serif;
+    }
+
+    .refresh-btn:hover { background: var(--ink); color: var(--paper); }
+
+    /* Search */
+    .search-bar {
+      display: flex;
+      border: 2px solid var(--ink);
+      margin-bottom: 0.5rem;
+    }
+
+    .search-input {
+      flex: 1;
+      border: none;
+      padding: 0.75rem 1rem;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.85rem;
+      background: transparent;
+      outline: none;
+      color: var(--ink);
+    }
+
+    .search-btn {
+      background: var(--ink);
+      color: var(--paper);
+      border: none;
+      padding: 0 1.2rem;
+      font-size: 0.85rem;
+      cursor: pointer;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 500;
+    }
+
+    @media (max-width: 900px) {
+      main { grid-template-columns: 1fr; }
+      .news-card.featured { grid-template-columns: 1fr; }
+      .news-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="logo">Pulse<span>AI</span></div>
+    <div class="header-date" id="headerDate"></div>
+    <div class="live-badge"><div class="live-dot"></div> Live Feed</div>
+  </div>
+  <nav class="category-nav">
+    <button class="cat-btn active" onclick="filterCategory('all', this)">All</button>
+    <button class="cat-btn" onclick="filterCategory('technology', this)">Technology</button>
+    <button class="cat-btn" onclick="filterCategory('business', this)">Business</button>
+    <button class="cat-btn" onclick="filterCategory('science', this)">Science</button>
+    <button class="cat-btn" onclick="filterCategory('world', this)">World</button>
+    <button class="cat-btn" onclick="filterCategory('health', this)">Health</button>
+    <button class="cat-btn" onclick="filterCategory('sports', this)">Sports</button>
+  </nav>
+</header>
+
+<main>
+  <section>
+    <div class="search-bar">
+      <input class="search-input" id="searchInput" placeholder="Search news semantically..." onkeydown="if(event.key==='Enter') semanticSearch()">
+      <button class="search-btn" onclick="semanticSearch()">Search</button>
+    </div>
+    <div class="refresh-bar">
+      <span id="articleCount">Loading articles...</span>
+      <button class="refresh-btn" onclick="loadNews()">↻ Refresh</button>
+    </div>
+    <div class="news-grid" id="newsGrid">
+      <!-- Skeletons -->
+      <div class="news-card featured">
+        <div>
+          <div class="skeleton" style="height:12px;width:80px;margin-bottom:12px"></div>
+          <div class="skeleton" style="height:28px;margin-bottom:8px"></div>
+          <div class="skeleton" style="height:28px;width:70%;margin-bottom:12px"></div>
+          <div class="skeleton" style="height:14px;margin-bottom:6px"></div>
+          <div class="skeleton" style="height:14px;width:80%"></div>
+        </div>
+        <div>
+          <div class="skeleton" style="height:180px"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <aside class="sidebar">
+    <!-- AI Chat -->
+    <div class="chat-box">
+      <div class="chat-header">
+        <div class="chat-header-icon">🤖</div>
+        <div>
+          <div class="chat-title">Ask the News AI</div>
+          <div class="chat-subtitle">RAG-powered Q&A</div>
+        </div>
+      </div>
+      <div class="chat-messages" id="chatMessages">
+        <div class="msg ai">
+          Hello! Ask me anything about today's news — I'll search through all articles to find you an answer.
+          <div class="msg-source">Powered by RAG + LLM</div>
+        </div>
+      </div>
+      <div class="chat-input-row">
+        <input class="chat-input" id="chatInput" placeholder="What's happening in AI today?" onkeydown="if(event.key==='Enter') sendMessage()">
+        <button class="send-btn" onclick="sendMessage()">→</button>
+      </div>
+    </div>
+
+    <!-- Trending -->
+    <div class="trending-box">
+      <div class="box-header">Trending Now</div>
+      <div id="trendingList">
+        ${[1,2,3,4,5].map(i=>`
+        <div class="trend-item">
+          <div class="trend-num">0${i}</div>
+          <div>
+            <div class="skeleton" style="height:12px;margin-bottom:6px"></div>
+            <div class="skeleton" style="height:10px;width:60%"></div>
+          </div>
+        </div>`).join('')}
+      </div>
+    </div>
+  </aside>
+</main>
+
+<script>
+  const API_BASE = 'http://localhost:8000';
+  let allArticles = [];
+  let currentCategory = 'all';
+
+  // Set date
+  document.getElementById('headerDate').textContent = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+
+  // --- NEWS LOADING ---
+  async function loadNews(category = null) {
+    try {
+      const url = category && category !== 'all'
+        ? `${API_BASE}/news/?category=${category}`
+        : `${API_BASE}/news/`;
+      const res = await fetch(url);
+      const data = await res.json();
+      allArticles = data.articles || [];
+      renderNews(allArticles);
+      renderTrending(allArticles.slice(0, 5));
+      document.getElementById('articleCount').textContent = `${allArticles.length} articles loaded`;
+    } catch {
+      useMockData();
+    }
+  }
+
+  function useMockData() {
+    allArticles = [
+      { title: "GPT-5 Achieves Human-Level Reasoning on Scientific Benchmarks", summary: "OpenAI's latest model demonstrates unprecedented performance across mathematics, coding, and multi-step logical reasoning tasks.", source: "TechCrunch", category: "technology", published_at: "2 hours ago", url: "#" },
+      { title: "Global Central Banks Signal Coordinated Rate Cuts Amid Cooling Inflation", summary: "Fed, ECB, and Bank of England hint at synchronized policy easing as inflation metrics soften across major economies.", source: "Bloomberg", category: "business", published_at: "3 hours ago", url: "#" },
+      { title: "CRISPR Gene Therapy Reverses Alzheimer's in Clinical Trial", summary: "A landmark Phase II trial shows 67% reduction in amyloid plaques and significant cognitive improvement after six months of treatment.", source: "Nature", category: "science", published_at: "5 hours ago", url: "#" },
+      { title: "India Launches World's Largest Solar Micro-Grid Network", summary: "A 50GW decentralized solar initiative aims to provide clean energy to 200 million rural households by 2027.", source: "Reuters", category: "world", published_at: "6 hours ago", url: "#" },
+      { title: "Meta's New AR Glasses Hit 2 Million Pre-Orders in 24 Hours", summary: "The Orion 2 headset combines lightweight design with full holographic display, retailing at $999.", source: "The Verge", category: "technology", published_at: "7 hours ago", url: "#" },
+    ];
+    renderNews(allArticles);
+    renderTrending(allArticles);
+    document.getElementById('articleCount').textContent = `${allArticles.length} articles (demo mode)`;
+  }
+
+  function renderNews(articles) {
+    const grid = document.getElementById('newsGrid');
+    if (!articles.length) { grid.innerHTML = '<div class="news-card" style="grid-column:1/-1;text-align:center;color:var(--muted);padding:3rem">No articles found.</div>'; return; }
+
+    grid.innerHTML = articles.map((a, i) => i === 0 ? `
+      <div class="news-card featured" onclick="window.open('${a.url||'#'}','_blank')">
+        <div>
+          <div class="featured-label">⚡ Top Story</div>
+          <div class="card-category">${a.category || 'general'}</div>
+          <h2 class="card-title">${a.title}</h2>
+          <p class="card-summary">${a.summary || a.content || ''}</p>
+          <div class="card-meta"><span class="source">${a.source}</span><span>${a.published_at || ''}</span></div>
+          <a class="read-btn" href="${a.url||'#'}" target="_blank">Read Full Story →</a>
+        </div>
+        <div style="background:linear-gradient(135deg,var(--tag-bg),var(--border));display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.6">📰</div>
+      </div>` : `
+      <div class="news-card" onclick="window.open('${a.url||'#'}','_blank')" style="animation-delay:${i*0.05}s">
+        <div class="card-category">${a.category || 'general'}</div>
+        <h3 class="card-title">${a.title}</h3>
+        <p class="card-summary">${(a.summary || a.content || '').slice(0, 120)}...</p>
+        <div class="card-meta"><span class="source">${a.source}</span><span>${a.published_at || ''}</span></div>
+      </div>`
+    ).join('');
+  }
+
+  function renderTrending(articles) {
+    document.getElementById('trendingList').innerHTML = articles.map((a, i) => `
+      <div class="trend-item" onclick="window.open('${a.url||'#'}','_blank')">
+        <div class="trend-num">0${i+1}</div>
+        <div>
+          <div class="trend-title">${a.title}</div>
+          <div class="trend-meta">${a.source} · ${a.published_at || ''}</div>
+        </div>
+      </div>`
+    ).join('');
+  }
+
+  function filterCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const filtered = cat === 'all' ? allArticles : allArticles.filter(a => a.category === cat);
+    renderNews(filtered);
+  }
+
+  async function semanticSearch() {
+    const q = document.getElementById('searchInput').value.trim();
+    if (!q) return;
+    try {
+      const res = await fetch(`${API_BASE}/news/search?q=${encodeURIComponent(q)}`);
+      const data = await res.json();
+      renderNews(data.articles || []);
+    } catch {
+      const filtered = allArticles.filter(a =>
+        a.title.toLowerCase().includes(q.toLowerCase()) ||
+        (a.summary||'').toLowerCase().includes(q.toLowerCase())
+      );
+      renderNews(filtered.length ? filtered : allArticles);
+    }
+  }
+
+  // --- CHAT ---
+  async function sendMessage() {
+    const input = document.getElementById('chatInput');
+    const q = input.value.trim();
+    if (!q) return;
+    input.value = '';
+
+    addMessage(q, 'user');
+    showTyping();
+
+    try {
+      const res = await fetch(`${API_BASE}/chat/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question: q })
+      });
+      const data = await res.json();
+      removeTyping();
+      const sources = data.sources?.map(s => s.title).join(', ') || '';
+      addMessage(data.answer, 'ai', sources ? `Sources: ${sources}` : null);
+    } catch {
+      removeTyping();
+      addMessage("I'm running in demo mode — connect the backend API to enable real RAG-powered answers!", 'ai');
+    }
+  }
+
+  function addMessage(text, role, source = null) {
+    const msgs = document.getElementById('chatMessages');
+    const div = document.createElement('div');
+    div.className = `msg ${role}`;
+    div.innerHTML = text + (source ? `<div class="msg-source">${source}</div>` : '');
+    msgs.appendChild(div);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function showTyping() {
+    const msgs = document.getElementById('chatMessages');
+    const t = document.createElement('div');
+    t.className = 'typing'; t.id = 'typing';
+    t.innerHTML = '<span></span><span></span><span></span>';
+    msgs.appendChild(t);
+    msgs.scrollTop = msgs.scrollHeight;
+  }
+
+  function removeTyping() {
+    document.getElementById('typing')?.remove();
+  }
+
+  // Init
+  loadNews();
+</script>
+</body>
+</html>
