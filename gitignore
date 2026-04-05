@@ -1,0 +1,134 @@
+# ========================
+# Python
+# ========================
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+.Python
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.whl
+MANIFEST
+
+# Virtual Environments
+venv/
+.venv/
+env/
+ENV/
+.env/
+
+# ========================
+# Environment & Secrets
+# ========================
+.env
+.env.local
+.env.production
+*.env
+secrets.json
+config.secret.py
+
+# ========================
+# AI / ML Artifacts
+# ========================
+# Vector store data (can be large)
+data/vectorstore/
+*.faiss
+*.index
+chroma_db/
+pinecone_cache/
+
+# Model weights (usually too large for GitHub)
+*.bin
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+models/weights/
+
+# Raw fetched data (regeneratable)
+data/raw/
+data/cache/
+
+# ========================
+# IDE & Editors
+# ========================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# ========================
+# Jupyter Notebooks
+# ========================
+.ipynb_checkpoints/
+notebooks/.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# ========================
+# Logs
+# ========================
+*.log
+logs/
+log/
+
+# ========================
+# Database Files
+# ========================
+*.db
+*.sqlite
+*.sqlite3
+
+# ========================
+# Docker
+# ========================
+.dockerignore
+
+# ========================
+# Testing & Coverage
+# ========================
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+.tox/
+nosetests.xml
+test-results/
+
+# ========================
+# Node / Frontend (if any)
+# ========================
+node_modules/
+.npm
+frontend/dist/
+frontend/build/
+*.lock
+package-lock.json
+yarn.lock
+
+# ========================
+# OS Files
+# ========================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Desktop.ini
